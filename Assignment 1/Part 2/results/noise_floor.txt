@@ -1,0 +1,6 @@
+File name: Behringer-UMC202_max_noise_floor.wav
+File length (sec): 9.04
+Mean value: 7.84e-06
+(Mean value in dB): -102.11dB
+STD: 3.71e-04
+Relative noise level: 12.16
