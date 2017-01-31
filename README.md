@@ -20,4 +20,4 @@ To run the synth (only tested on MacOS Yosemite), run the command `pythonw synth
 ## Part 2
 The goal of A2.2 was to add a decay envelope to some of the files generated from the previous section. I wrote this in as the Envelope dropdown box to selevt between a 0.1s, 0.25s decay, or a growth and decay envelope.
 
-![pySynth]('Assignment\ 2/pySynth.png')
+![pySynth](https://github.com/Adam93MT/Computational-Audio/blob/master/Assignment%202/pySynth.png)
