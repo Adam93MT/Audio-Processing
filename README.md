@@ -18,4 +18,6 @@ The goal of A2.1 was to recreate the Pasco 9307 Fourier Synthesizer. With a fund
 To run the synth (only tested on MacOS Yosemite), run the command `pythonw synth.py`. Dependencies include: `wave`, `appJar`, `numpy`, `sounddevice`, and `pyplot`
 
 ## Part 2
-The goal of A2.2 was to add a decay envelope to some of the files generated from the previous section.
+The goal of A2.2 was to add a decay envelope to some of the files generated from the previous section. I wrote this in as the Envelope dropdown box to selevt between a 0.1s, 0.25s decay, or a growth and decay envelope.
+
+![pySynth]('Assignment\ 2/pySynth.png')

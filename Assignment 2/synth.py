@@ -15,11 +15,20 @@ try:
 except Exception as e:
 	pass
 
+global bitRate
 bitRate = 16
+global fs 
 fs = 44100
+global dur 
 dur = 2
+global length
 length = fs*dur
+global harmonics 
+harmonics = 9
+global T 
 T = np.linspace(0, dur, length)
+global E
+E = np.linspace(1,1,length)
 
 # top slice - CREATE the GUI
 app = gui()
@@ -65,7 +74,7 @@ def export(param):
 	exportAudio()
 
 def setPreset(param):
-	preset = app.getOptionBox("Presets:")
+	preset = app.getOptionBox("Presets")
 	if preset == "None":
 		pass
 	elif preset == "Sine":
@@ -79,8 +88,12 @@ def setPreset(param):
 	elif preset == "Arbitrary":
 		setArb()
 	else: return
-	# play("play")
-	pass
+
+# def setEnv(param):
+# 	env = app.getOptionBox("Envelope")
+# 	if env == "None":
+# 		pass
+# 	else: setEnvelope(env)
 
 app.addLabelNumericEntry("Amp1", 3, 1)
 app.setEntry("Amp1", 1)
@@ -142,22 +155,22 @@ app.addRadioButton("waveType9", "Sin", 6, 9)
 app.addNamedButton("Play", "play", play, 7, 4, 1)
 app.addNamedButton("Export", "export", export, 7, 5, 1)
 
-app.addLabelOptionBox("Presets:", ["None", "Sine", "Square", "Triangle", "Sawtooth", "Arbitrary"], 8, 5, 1)
+app.addLabelOptionBox("Presets", ["None", "Sine", "Square", "Triangle", "Sawtooth", "Arbitrary"], 8, 4, 1)
+app.addLabelOptionBox("Envelope", ["None", "0.1s", "0.25s", "Growth-Decay", "0"], 8, 5, 1)
 # app.addNamedButton("Set", "setPreset", setPreset, 8, 5, 1)
-app.setOptionBoxFunction("Presets:", setPreset)
+app.setOptionBoxFunction("Presets", setPreset)
+# app.setOptionBoxFunction("Envelope", setEnv)
 
-# HERE'S THE INTERRESTING STUFF...
-
+# ------------ HERE'S THE INTERRESTING STUFF ------------ #
 f1 = 440*2*np.pi
 
 def compileAudio():
 	print "Compiling..."
-	On = [False] * 9
-	Type = [""] * 9
-	Amp = [0] * 9
-	Phase = [0] * 9
-	# data = np.random.uniform(-1, 1, fs*10)
-	for h in xrange(1,10):
+	On = [False] * harmonics
+	Type = [""] * harmonics
+	Amp = [0] * harmonics
+	Phase = [0] * harmonics
+	for h in xrange(1,harmonics):
 		On[h-1] = app.getCheckBox("ON " + str(h))
 		if On[h-1]:
 			Type[h-1] = app.getRadioButton("waveType" + str(h))
@@ -167,8 +180,7 @@ def compileAudio():
 				data = Amp[h-1] * np.cos(f1*T + Phase[h-1])
 			else: 
 				data += Amp[h-1] * np.cos(f1*h*T + Phase[h-1])
-	print "Compiled"
-	return data
+	return data * getEnvelope()
 
 def exportAudio():
 	audio = normalize(compileAudio())
@@ -180,7 +192,7 @@ def exportAudio():
 	for s in range(0,length):
 		audio_bit = normalizeBit(audio[s])
 		audio_packed.append(struct.pack('h',audio_bit))
-	print np.max(abs(audio_bit))
+	# print np.max(abs(audio_bit))
 	audio_str = ''.join(audio_packed)
 
 	outfile.writeframes(audio_str)
@@ -200,7 +212,7 @@ def setSine():
 		app.setRadioButton("waveType" + str(h), "Cos")
 
 def setSquare():
-	for h in xrange(1,10):
+	for h in xrange(1,harmonics):
 		if h%2 == 0:
 			app.setCheckBox("ON " + str(h), False)
 			app.setEntry("Amp" + str(h), 0)
@@ -223,9 +235,8 @@ def setTriangle():
 			app.setEntry("Amp" + str(h), a)
 			app.setRadioButton("waveType" + str(h), wavetype)
 
-
 def setSawtooth():
-	for h in xrange(1,10):
+	for h in xrange(1,harmonics):
 		a = 1/float(h)
 		phase = 90
 		if h%2 == 0:
@@ -246,6 +257,24 @@ def setArb():
 		app.setEntry("Phase" +str(h), phase[h-1])
 		app.setRadioButton("waveType" + str(h), wavetype)
 
+def getEnvelope():
+	env = app.getOptionBox("Envelope")
+	if env == "0.1s":
+		E = np.exp(-T/0.1)
+	elif env == "0.25s":
+		E = np.exp(-T/0.25)
+	elif env == "Growth-Decay":
+		E = np.linspace(1, 1, length)
+		E1 = 1 - np.exp(-T[0 : length/2]/0.1)
+		E2 = np.exp(-(T[length/2 : length] - 1)/0.25)
+		E = np.append(E1,E2,0)
+	elif env == "0":
+		E = 0
+	else:
+		E = 1
+	# print "E " + str(E)
+	return E
+
 def normalize(data):
 	return data/np.max(abs(data))
 
@@ -255,7 +284,7 @@ def normalizeBit(data):
 
 def plotAudio(T,audio):
 	print "Plotting..."
-	with open('audio.csv', 'wb') as csvfile:
+	with open('results/audio.csv', 'wb') as csvfile:
 		csvwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 		now = getNowString()
 		csvwriter.writerow(getFilename())
@@ -266,16 +295,20 @@ def plotAudio(T,audio):
 def getNowString():
 	now = str(dt.now().isoformat())
 	now.replace('-', ':')
-	return now[0:10] + "--" + now[11:19]
+	return now[0:10] + "-" + now[11:19]
 
 def getFilename():
-	preset = app.getOptionBox("Presets:")
+	preset = app.getOptionBox("Presets")
+	env = app.getOptionBox("Envelope")
 	if preset != "None":
 		filename = preset
 	else:
 		filename = "Export-" + getNowString()
-	return filename
-
+	if env != "None":
+		filename += "-" + env
+	filename.replace("/", "-")
+	filename.replace(":", "-")
+	return "results/" + filename
 
 
 # bottom slice - START the GUI
