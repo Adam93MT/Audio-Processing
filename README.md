@@ -1,4 +1,4 @@
-# Audio-Processing
+# Computer Audio (CS 489)
 
 # Assignment 0
 The goal of Assignment 0 was to get familiar with working with audio. The task was to write a program to export a Bb note, a B note, and the sum of the two as a wave file.
