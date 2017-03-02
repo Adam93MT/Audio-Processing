@@ -1,0 +1,69 @@
+close all
+Sig1file = 'Sig1.wav';
+Sig2file = 'Sig2.wav';
+Sig3file = 'Sig3.wav';
+Sig4file = 'Sig4.wav';
+
+for x = [1:4]
+    if x == 1
+        file = Sig1file;
+    elseif x ==2
+        file = Sig2file;
+    elseif x == 3
+        file = Sig3file;
+    elseif x == 4
+        file = Sig4file;
+    end
+    [Sig, fs] = audioread(file);
+    Fourier = (fft(Sig));
+    T = linspace(0,length(Sig)/fs,length(Sig));
+    freq = linspace(0,fs,length(Fourier));
+    f1 = 100;
+
+    figure()
+    plot(T,Sig)
+    xlim([0 1/f1])
+
+    figure()
+    plot(freq,abs(Fourier))
+    xlim([0 2500])
+    figure()
+    plot(freq,angle(Fourier))
+    xlim([0 1500])
+    ylim([-3*pi/2 pi/2])
+
+    harmonix = [1:25];
+    harmonics_f = harmonix*f1;
+    harm_idx = harmonics_f*2 + 1;
+
+    mag_harm = abs(Fourier(harm_idx));
+    mag_harm = mag_harm/max(mag_harm); %normalize
+    phase_harm = angle(Fourier(harm_idx));
+    phase_harm = round(phase_harm*pi/2)/(pi/2); %round to the nearest pi/2
+
+    figure()
+    scatter(harmonix, mag_harm)
+    figure()
+    scatter(harmonix, phase_harm)
+
+    %recreate
+    figure()
+    hold on
+    for i = harmonix
+       if i == 1
+           Outsig = mag_harm(i) * cos(harmonics_f(i)*T*(2*pi));
+       else
+           plot(T,Outsig)
+           Outsig = Outsig + mag_harm(i) * cos(harmonics_f(i)*T*(2*pi));
+       end
+    end
+    xlim([0 1/(f1)])
+    hold off
+
+    Outsig = Outsig/max(Outsig)*0.8;
+    figure()
+    plot(T,Outsig)
+    xlim([0 1/f1])
+
+    RMS = sqrt(1/length(Sig)*abs(sum((Sig.^2 - Outsig'.^2))))
+end
